@@ -100,7 +100,8 @@ form.addEventListener('submit', async e => {
     if (!res.ok) throw new Error(data.error || 'Gagal memuat data');
     render(document.getElementById('shopee'), data.shopee || []);
     render(document.getElementById('tiktok'), data.tiktok || []);
-    statusEl.textContent = `Ditemukan ${(data.shopee||[]).length} produk Shopee • ${(data.tiktok||[]).length} produk TikTok Shop`;
+    const summary = `Ditemukan ${(data.shopee||[]).length} produk Shopee • ${(data.tiktok||[]).length} produk TikTok Shop`;
+    statusEl.textContent = [summary, ...(data.warnings || [])].join(' • ');
   } catch (err) {
     statusEl.textContent = 'Error: ' + err.message;
   } finally {
