@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BandingHarga — Shopee vs TikTok Shop</title>
+<meta name="description" content="Bandingkan harga produk di Shopee dan TikTok Shop tanpa login.">
+<style>
+  :root{
+    --bg:#0f1115; --card:#171a21; --card2:#1e222b; --text:#e8eaf0;
+    --muted:#9aa3b2; --shopee:#ee4d2d; --tiktok:#fe2c55; --accent:#25f4ee;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+       background:var(--bg);color:var(--text);min-height:100vh}
+  header{padding:28px 20px 8px;text-align:center}
+  header h1{font-size:1.5rem;font-weight:800}
+  header h1 .s{color:var(--shopee)} header h1 .t{color:var(--tiktok)}
+  header p{color:var(--muted);font-size:.85rem;margin-top:4px}
+  form{display:flex;gap:10px;max-width:560px;margin:22px auto;padding:0 16px}
+  input{flex:1;padding:12px 16px;border-radius:12px;border:1px solid #2a2f3a;
+        background:var(--card);color:var(--text);font-size:1rem;outline:none}
+  input:focus{border-color:var(--accent)}
+  button{padding:12px 22px;border-radius:12px;border:0;font-weight:700;font-size:1rem;
+         cursor:pointer;background:linear-gradient(90deg,var(--tiktok),var(--shopee));color:#fff}
+  button:disabled{opacity:.5;cursor:wait}
+  #status{text-align:center;color:var(--muted);font-size:.85rem;min-height:20px;margin-bottom:10px}
+  #results{max-width:1100px;margin:0 auto;padding:0 16px 60px;
+           display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:760px){#results{grid-template-columns:1fr}}
+  .col h2{font-size:1rem;margin:14px 4px 10px;display:flex;align-items:center;gap:8px}
+  .dot{width:10px;height:10px;border-radius:50%}
+  .dot.s{background:var(--shopee)} .dot.t{background:var(--tiktok)}
+  .item{display:flex;gap:12px;background:var(--card);border:1px solid #232833;
+        border-radius:14px;padding:12px;margin-bottom:10px;transition:transform .15s}
+  .item:hover{transform:translateY(-2px);border-color:#313949}
+  .item img{width:72px;height:72px;object-fit:cover;border-radius:10px;background:var(--card2);flex-shrink:0}
+  .item .info{flex:1;min-width:0}
+  .item .name{font-size:.85rem;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;
+              -webkit-box-orient:vertical;overflow:hidden;margin-bottom:6px}
+  .item .price{font-weight:800;color:var(--accent);font-size:1rem}
+  .item .old{font-size:.75rem;color:var(--muted);text-decoration:line-through;margin-left:6px}
+  .item .meta{font-size:.72rem;color:var(--muted);margin-top:3px}
+  .item a{flex-shrink:0;align-self:center;font-size:.75rem;font-weight:700;color:#fff;
+          background:var(--card2);border:1px solid #313949;padding:8px 12px;
+          border-radius:10px;text-decoration:none;white-space:nowrap}
+  .empty{background:var(--card);border:1px dashed #2a2f3a;border-radius:14px;
+         padding:30px;text-align:center;color:var(--muted);font-size:.85rem}
+  footer{text-align:center;color:#5b6372;font-size:.75rem;padding:20px}
+</style>
+</head>
+<body>
+<header>
+  <h1><span class="s">Banding</span>Harga</h1>
+  <p>Shopee vs TikTok Shop — tanpa login, tanpa ribet</p>
+</header>
+
+<form id="form" autocomplete="off">
+  <input id="kw" type="text" placeholder="Cari produk… misal: headset bluetooth" required>
+  <button id="btn" type="submit">Bandingkan</button>
+</form>
+
+<div id="status"></div>
+<div id="results">
+  <div class="col"><h2><span class="dot s"></span>Shopee</h2><div id="shopee"><div class="empty">Belum ada pencarian</div></div></div>
+  <div class="col"><h2><span class="dot t"></span>TikTok Shop</h2><div id="tiktok"><div class="empty">Belum ada pencarian</div></div></div>
+</div>
+
+<footer>Harga dapat berubah sewaktu-waktu • Data diambil via API resmi affiliate</footer>
+
+<script>
+const form = document.getElementById('form');
+const btn  = document.getElementById('btn');
+const statusEl = document.getElementById('status');
+const fmt = n => 'Rp ' + Number(n).toLocaleString('id-ID');
+
+function render(el, items) {
+  if (!items.length) { el.innerHTML = '<div class="empty">Produk tidak ditemukan</div>'; return; }
+  el.innerHTML = items.map(p => `
+    <div class="item">
+      <img loading="lazy" src="${p.image}" alt="" onerror="this.style.visibility='hidden'">
+      <div class="info">
+        <div class="name">${p.name}</div>
+        <div class="price">${fmt(p.price)}${p.originalPrice && p.originalPrice > p.price ? `<span class="old">${fmt(p.originalPrice)}</span>` : ''}</div>
+        <div class="meta">⭐ ${p.rating || '-'} • Terjual ${p.sold || 0} • ${p.shopName || ''}</div>
+      </div>
+      <a href="${p.link}" target="_blank" rel="noopener">Lihat</a>
+    </div>`).join('');
+}
+
+form.addEventListener('submit', async e => {
+  e.preventDefault();
+  const kw = document.getElementById('kw').value.trim();
+  if (!kw) return;
+  btn.disabled = true; btn.textContent = 'Mencari…';
+  statusEl.textContent = 'Mengambil data dari Shopee & TikTok Shop…';
+  try {
+    const res = await fetch('/api/search?keyword=' + encodeURIComponent(kw));
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Gagal memuat data');
+    render(document.getElementById('shopee'), data.shopee || []);
+    render(document.getElementById('tiktok'), data.tiktok || []);
+    statusEl.textContent = `Ditemukan ${(data.shopee||[]).length} produk Shopee • ${(data.tiktok||[]).length} produk TikTok Shop`;
+  } catch (err) {
+    statusEl.textContent = 'Error: ' + err.message;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Bandingkan';
+  }
+});
+</script>
+</body>
+</html>
